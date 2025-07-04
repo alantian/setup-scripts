@@ -13,7 +13,7 @@ LOCAL_URL="https://raw.githubusercontent.com/alantian/setup-scripts/main/local.s
 ask_user() {
     local response
     echo -n "Install global packages (requires sudo)? [y/N]: "
-    if read -t 30 -r response 2>/dev/null; then
+    if read -t 30 -r response </dev/tty 2>/dev/null; then
         [[ "$response" =~ ^[yY]([eE][sS])?$ ]]
     else
         echo
