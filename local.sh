@@ -66,14 +66,7 @@ PACKAGES[vim-plugins]='
         return 1
     fi
     
-    # Check if Vundle exists (dotfiles manager handles content)
-    if [[ -d ~/.vim/bundle/Vundle.vim ]]; then
-        info "Vundle directory exists"
-    else
-        info "Installing Vundle"
-        run_cmd "vundle" "mkdir -p ~/.vim/bundle" &&
-        run_cmd "vundle" "git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim"
-    fi
+    # Note: Vundle installation/setup is handled by dotfiles manager
     
     info "Installing vim plugins"
     run_cmd "vim" "vim +PluginInstall +qall"
