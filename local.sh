@@ -66,15 +66,12 @@ PACKAGES[vim-plugins]='
         return 1
     fi
     
-    # Check if Vundle exists and is a proper git repo
-    if [[ -d ~/.vim/bundle/Vundle.vim/.git ]] && 
-       cd ~/.vim/bundle/Vundle.vim && 
-       git remote get-url origin | grep -q "github.com/VundleVim/Vundle.vim"; then
-        info "Vundle already installed"
+    # Check if Vundle exists (dotfiles manager handles content)
+    if [[ -d ~/.vim/bundle/Vundle.vim ]]; then
+        info "Vundle directory exists"
     else
         info "Installing Vundle"
         run_cmd "vundle" "mkdir -p ~/.vim/bundle" &&
-        run_cmd "vundle" "rm -rf ~/.vim/bundle/Vundle.vim" &&
         run_cmd "vundle" "git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim"
     fi
     
