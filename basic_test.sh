@@ -98,8 +98,8 @@ test_local() {
     start_server || return 1
     
     local failed=0
-    test_platform "Ubuntu" "ubuntu:latest" "apt update && apt install -y curl sudo" "http://localhost:8000/basic.sh" || ((failed++))
-    test_platform "Arch Linux" "archlinux:latest" "pacman -Sy --noconfirm curl sudo" "http://localhost:8000/basic.sh" || ((failed++))
+    test_platform "Ubuntu" "ubuntu:latest" "apt update && apt install -y curl sudo" "http://localhost:8000/global.sh" || ((failed++))
+    test_platform "Arch Linux" "archlinux:latest" "pacman -Sy --noconfirm curl sudo" "http://localhost:8000/global.sh" || ((failed++))
     
     stop_server
     return $failed
@@ -109,7 +109,7 @@ test_local() {
 test_github() {
     info "Testing GitHub deployment"
     local failed=0
-    local github_url="https://raw.githubusercontent.com/alantian/setup-scripts/main/basic.sh"
+    local github_url="https://raw.githubusercontent.com/alantian/setup-scripts/main/global.sh"
     
     test_platform "Ubuntu" "ubuntu:latest" "apt update && apt install -y curl sudo" "$github_url" || ((failed++))
     test_platform "Arch Linux" "archlinux:latest" "pacman -Sy --noconfirm curl sudo" "$github_url" || ((failed++))

@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 
-# Basic development tools installer for Arch Linux, Ubuntu, and macOS
-# Usage: curl -fsSL https://raw.githubusercontent.com/alantian/setup-scripts/main/basic.sh | bash
+# Global development tools installer for Arch Linux, Ubuntu, and macOS
+# Usage: curl -fsSL https://raw.githubusercontent.com/alantian/setup-scripts/main/global.sh | bash
 
 set -euo pipefail
 
 # Package definitions
 declare -A PACKAGES=(
-    [core]="git wget curl unzip bzip2 rsync tar vim htop tree tmux zsh"
-    [arch]="base-devel zsh-completions"
-    [ubuntu]="build-essential byobu software-properties-common apt-transport-https ca-certificates gnupg lsb-release"
-    [macos]="zsh-completions coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-getopt"
+    [shared]="git wget curl unzip bzip2 rsync tar vim htop tree tmux zsh"
+    [arch]="base-devel zsh-completions eza bat git-delta fd duf dust bottom btop sd difftastic plocate hexyl zoxide broot direnv fzf croc hyperfine xh entr tig lazygit thefuck ctop xplr glances gtop zenith ttf-meslo-nerd"
+    [arch_aur]="nodejs-tldr lazydocker"
+    [ubuntu]="build-essential byobu software-properties-common apt-transport-https ca-certificates gnupg lsb-release batcat fd-find plocate zoxide direnv fzf btop entr tig glances"
+    [macos]="zsh-completions coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-getopt eza bat git-delta fd duf dust bottom btop sd difftastic hexyl zoxide broot direnv fzf croc hyperfine xh entr tig lazygit thefuck ctop xplr glances gtop zenith tldr lazydocker"
 )
 
 # Colors and logging
@@ -65,6 +66,17 @@ check_root() {
     fi
 }
 
+# Install yay AUR helper for Arch Linux
+install_yay() {
+    command -v yay &>/dev/null && return 0
+    
+    info "Installing yay AUR helper"
+    local temp_dir=$(mktemp -d)
+    run_cmd "yay" "cd '$temp_dir' && git clone https://aur.archlinux.org/yay.git" &&
+    run_cmd "yay" "cd '$temp_dir/yay' && makepkg -si --noconfirm" &&
+    rm -rf "$temp_dir"
+}
+
 # Change shell to zsh
 change_shell() {
     local current_shell=$(basename "$SHELL")
@@ -83,17 +95,43 @@ change_shell() {
     return 0  # Success
 }
 
+# Display packages to be installed
+show_packages() {
+    local os="$1"
+    local shared_packages="${PACKAGES[shared]}"
+    local os_packages="${PACKAGES[$os]}"
+    
+    info "Packages to be installed on $os:"
+    echo -e "${DIM}Shared packages:${NC} $shared_packages"
+    echo -e "${DIM}$os packages:${NC} $os_packages"
+    
+    if [[ "$os" == "arch" ]]; then
+        local aur_packages="${PACKAGES[arch_aur]}"
+        if [[ -n "$aur_packages" ]]; then
+            echo -e "${DIM}AUR packages:${NC} $aur_packages"
+        fi
+    fi
+}
+
 # Install packages for each OS
 install_packages() {
-    local os="$1" packages="${PACKAGES[core]} ${PACKAGES[$os]}"
+    local os="$1" packages="${PACKAGES[shared]} ${PACKAGES[$os]}"
     
     case "$os" in
         arch)
             run_cmd "pacman" "sudo pacman -Syu --noconfirm" &&
             run_cmd "pacman" "sudo pacman -S --noconfirm $packages"
+            
+            # Install AUR packages if any
+            local aur_packages="${PACKAGES[arch_aur]}"
+            if [[ -n "$aur_packages" ]]; then
+                install_yay || { error "yay installation failed"; return 1; }
+                run_cmd "yay" "yay -S --noconfirm $aur_packages"
+            fi
             ;;
         ubuntu)
             run_cmd "apt" "sudo apt update" &&
+            run_cmd "apt" "sudo apt upgrade -y" &&
             run_cmd "apt" "sudo apt install -y $packages"
             ;;
         macos)
@@ -105,7 +143,9 @@ install_packages() {
                 [[ -f "/usr/local/bin/brew" ]] && eval "$(/usr/local/bin/brew shellenv)"
             fi
             run_cmd "brew" "brew update" &&
-            run_cmd "brew" "brew install $packages"
+            run_cmd "brew" "brew upgrade" &&
+            run_cmd "brew" "brew install $packages" &&
+            run_cmd "brew" "brew install --cask font-meslo-lg-nerd-font"
             ;;
     esac
 }
@@ -120,6 +160,7 @@ main() {
     local os=$(detect_os)
     info "Detected OS: $os"
     
+    show_packages "$os"
     install_packages "$os" || { error "Package installation failed"; exit 1; }
     success "Package installation completed"
     
@@ -130,7 +171,6 @@ main() {
     fi
     success "Installation completed successfully!"
     if [[ "$shell_changed" == "true" ]]; then
-        echo
         warn "IMPORTANT: Your shell has been changed to zsh"
         info "Please restart your terminal or log out and back in"
     fi

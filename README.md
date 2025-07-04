@@ -4,34 +4,39 @@ Cross-platform package setup scripts for *nix systems (Arch Linux, Ubuntu, macOS
 
 ## Quick Start
 
+### Complete Setup (Recommended)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/alantian/setup-scripts/main/basic.sh | bash
+curl -fsSL https://raw.githubusercontent.com/alantian/setup-scripts/main/all.sh | bash
+```
+*Interactively runs both global and local installers*
+
+### Individual Scripts
+
+#### Global Package Installation
+```bash
+curl -fsSL https://raw.githubusercontent.com/alantian/setup-scripts/main/global.sh | bash
+```
+
+#### Local Package Installation
+```bash
+curl -fsSL https://raw.githubusercontent.com/alantian/setup-scripts/main/local.sh | bash
+# or for specific packages:
+./local.sh fzf
 ```
 
 ## What Gets Installed
 
-Essential development tools including:
-- **Development basics**: git, curl, wget, build tools
-- **System utilities**: vim, htop, tree, tmux  
-- **Shell setup**: zsh (set as default shell)
-- **Platform-specific tools**: Package managers and system-specific utilities
+Essential development tools including git, curl, build tools, modern CLI utilities (like eza, bat, fzf, zoxide), system utilities (vim, htop, tmux), and zsh shell setup. The global script installs packages via system package managers, while the local script installs recent versions to your home directory.
 
-For detailed package lists, see [CLAUDE.md](CLAUDE.md#package-organization).
+**Platform coverage**: Arch Linux has the most comprehensive package set, macOS has excellent coverage via Homebrew, and Ubuntu includes a curated subset from official repositories. For detailed package lists and platform differences, see [CLAUDE.md](CLAUDE.md#package-organization).
 
 ## Supported Systems
 
-- **Arch Linux** - Latest rolling release
-- **Ubuntu** - 20.04 LTS and newer
-- **macOS** - Intel and Apple Silicon
+Arch Linux, Ubuntu 20.04+, and macOS (Intel/Apple Silicon).
 
 ## Features
 
-- **Cross-platform**: Automatically detects your OS
-- **Safe execution**: Includes protection against partial downloads
-- **Clean output**: Shows progress during installation, hides noise on success
-- **Smart output management**: Limits package manager output to last 10 lines with truncation indicator if needed
-- **Shell integration**: Automatically switches to zsh as default shell
-- **Error handling**: Continues on individual package failures
+Cross-platform, idempotent, non-interactive installation with automatic OS detection, clean output management, zsh shell setup, and AUR support for Arch Linux.
 
 ## Testing
 
@@ -46,9 +51,16 @@ For detailed package lists, see [CLAUDE.md](CLAUDE.md#package-organization).
 
 ### Manual Testing
 ```bash
-# Test locally on your system
-chmod +x basic.sh
-./basic.sh
+# Test complete setup locally
+chmod +x all.sh
+./all.sh
+
+# Test individual scripts locally
+chmod +x global.sh
+./global.sh
+
+chmod +x local.sh
+./local.sh
 ```
 
 ### Container Testing (Linux hosts only)
@@ -61,7 +73,7 @@ Docker-based testing requires a Linux host system because Linux containers need 
     apt update >/dev/null 2>&1 && 
     apt install -y curl sudo >/dev/null 2>&1 && 
     echo 'testuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers &&
-    su - testuser -c 'curl -fsSL http://localhost:8000/basic.sh | bash'
+    su - testuser -c 'curl -fsSL http://localhost:8000/global.sh | bash'
 "; pkill -f "python3 -m http.server 8000" 2>/dev/null || true)
 
 # Test on Arch Linux  
@@ -69,7 +81,7 @@ Docker-based testing requires a Linux host system because Linux containers need 
     useradd -m testuser >/dev/null 2>&1 && 
     pacman -Sy --noconfirm curl sudo >/dev/null 2>&1 && 
     echo 'testuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers &&
-    su - testuser -c 'curl -fsSL http://localhost:8000/basic.sh | bash'
+    su - testuser -c 'curl -fsSL http://localhost:8000/global.sh | bash'
 "; pkill -f "python3 -m http.server 8000" 2>/dev/null || true)
 ```
 
@@ -83,7 +95,7 @@ Docker-based testing requires a Linux host system because Linux containers need 
 ## Troubleshooting
 
 ### Package Installation Output
-The script limits package manager output to the last 10 lines during execution. If output exceeds this, you'll see a truncation indicator (e.g., "... (25 more lines above)"). On success, all output is cleared; on failure, the limited output remains visible for debugging.
+The script hides output on successful commands and only shows output on failure. Failed commands display up to the last 10 lines with a truncation indicator if more lines were available (e.g., "... (25 more lines above)").
 
 ### Shell Not Changed
 The script only shows restart instructions if your shell was actually changed from the current one to zsh.
