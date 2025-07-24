@@ -10,6 +10,9 @@ CURRENT_OUTPUT_FILE=""
 CURRENT_COMMAND=""
 CURRENT_PREFIX=""
 
+# Pre-cleaned packages (set in main function)
+declare -A CLEAN_PACKAGES
+
 # Trap handler for Ctrl+C
 cleanup_and_show_output() {
     echo
@@ -257,33 +260,33 @@ ask_gui() {
 # Display packages to be installed
 show_packages() {
     local os="$1" include_gui="$2"
-    local shared_packages=$(clean_packages "${PACKAGES[shared]}")
-    local os_packages=$(clean_packages "${PACKAGES[$os]}")
+    local shared_packages="${CLEAN_PACKAGES[shared]}"
+    local os_packages="${CLEAN_PACKAGES[$os]}"
     
     info "Packages to be installed on $os:"
     echo -e "${DIM}shared packages:${NC} $shared_packages"
     echo -e "${DIM}$os packages:${NC} $os_packages"
     
     if [[ "$os" == "arch" ]]; then
-        local aur_packages=$(clean_packages "${PACKAGES[arch_aur]}")
+        local aur_packages="${CLEAN_PACKAGES[arch_aur]}"
         if [[ -n "$aur_packages" ]]; then
             echo -e "${DIM}aur packages:${NC} $aur_packages"
         fi
     fi
     
     if [[ "$include_gui" == "true" ]]; then
-        local shared_gui_packages=$(clean_packages "${PACKAGES[shared_gui]}")
+        local shared_gui_packages="${CLEAN_PACKAGES[shared_gui]}"
         if [[ -n "$shared_gui_packages" ]]; then
             echo -e "${DIM}shared gui packages:${NC} $shared_gui_packages"
         fi
         
-        local gui_packages=$(clean_packages "${PACKAGES[${os}_gui]}")
+        local gui_packages="${CLEAN_PACKAGES[${os}_gui]}"
         if [[ -n "$gui_packages" ]]; then
             echo -e "${DIM}$os gui packages:${NC} $gui_packages"
         fi
         
         if [[ "$os" == "arch" ]]; then
-            local aur_gui_packages=$(clean_packages "${PACKAGES[arch_aur_gui]}")
+            local aur_gui_packages="${CLEAN_PACKAGES[arch_aur_gui]}"
             if [[ -n "$aur_gui_packages" ]]; then
                 echo -e "${DIM}aur gui packages:${NC} $aur_gui_packages"
             fi
@@ -291,25 +294,42 @@ show_packages() {
     fi
 }
 
+# Add GUI packages to a package variable if GUI is enabled
+add_gui_packages() {
+    local packages_var="$1" os="$2"
+    [[ "$include_gui" != "true" ]] && return
+    
+    local shared_gui="${CLEAN_PACKAGES[shared_gui]}"
+    local os_gui="${CLEAN_PACKAGES[${os}_gui]}"
+    
+    if [[ -n "$shared_gui" ]]; then
+        eval "$packages_var+=\" $shared_gui\""
+    fi
+    if [[ -n "$os_gui" ]]; then
+        eval "$packages_var+=\" $os_gui\""
+    fi
+}
+
 # Install packages for each OS
 install_packages() {
     local os="$1" include_gui="$2"
-    local packages="$(clean_packages "${PACKAGES[shared]}") $(clean_packages "${PACKAGES[$os]}")"
+    local packages="${CLEAN_PACKAGES[shared]} ${CLEAN_PACKAGES[$os]}"
     
     case "$os" in
         arch)
             # Add GUI packages to main package list for Arch
-            if [[ "$include_gui" == "true" ]]; then
-                packages+=" $(clean_packages "${PACKAGES[shared_gui]}") $(clean_packages "${PACKAGES[arch_gui]}")"
-            fi
+            add_gui_packages "packages" "$os"
             
             run_cmd "pacman" "sudo pacman -Syu --noconfirm" &&
             run_cmd "pacman" "sudo pacman -S --noconfirm $packages"
             
             # Install AUR packages
-            local aur_packages=$(clean_packages "${PACKAGES[arch_aur]}")
+            local aur_packages="${CLEAN_PACKAGES[arch_aur]}"
             if [[ "$include_gui" == "true" ]]; then
-                aur_packages+=" $(clean_packages "${PACKAGES[arch_aur_gui]}")"
+                local aur_gui="${CLEAN_PACKAGES[arch_aur_gui]}"
+                if [[ -n "$aur_gui" ]]; then
+                    aur_packages+=" $aur_gui"
+                fi
             fi
             
             if [[ -n "$aur_packages" ]]; then
@@ -319,9 +339,7 @@ install_packages() {
             ;;
         ubuntu)
             # Add GUI packages to main package list for Ubuntu
-            if [[ "$include_gui" == "true" ]]; then
-                packages+=" $(clean_packages "${PACKAGES[shared_gui]}") $(clean_packages "${PACKAGES[ubuntu_gui]}")"
-            fi
+            add_gui_packages "packages" "$os"
             
             run_cmd "apt" "sudo apt update" &&
             run_cmd "apt" "sudo apt upgrade -y" &&
@@ -342,7 +360,9 @@ install_packages() {
             
             # Install GUI applications via cask
             if [[ "$include_gui" == "true" ]]; then
-                local gui_packages="$(clean_packages "${PACKAGES[shared_gui]}") $(clean_packages "${PACKAGES[macos_gui]}")"
+                local shared_gui="${CLEAN_PACKAGES[shared_gui]}"
+                local macos_gui="${CLEAN_PACKAGES[macos_gui]}"
+                local gui_packages="$shared_gui $macos_gui"
                 run_cmd "brew" "brew install --cask $gui_packages"
             fi
             ;;
@@ -356,8 +376,14 @@ main() {
     info "Starting basic development tools installation"
     check_root
     
-    local os=$(detect_os)
+    local os
+    os=$(detect_os)
     info "Detected OS: $os"
+    
+    # Pre-clean all packages once to avoid redundant calls
+    for key in "${!PACKAGES[@]}"; do
+        CLEAN_PACKAGES[$key]=$(clean_packages "${PACKAGES[$key]}")
+    done
     
     # Ask about GUI applications with timeout
     if ask_gui; then
