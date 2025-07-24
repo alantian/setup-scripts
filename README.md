@@ -1,6 +1,6 @@
 # Setup Scripts
 
-Cross-platform package setup scripts for *nix systems (Arch Linux, Ubuntu, macOS). Install essential development tools with a single command.
+Cross-platform package setup scripts for *nix systems (Arch Linux, Ubuntu, macOS). Install packages with a single command.
 
 ## Quick Start
 

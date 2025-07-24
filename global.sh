@@ -363,7 +363,7 @@ install_packages() {
                 local shared_gui="${CLEAN_PACKAGES[shared_gui]}"
                 local macos_gui="${CLEAN_PACKAGES[macos_gui]}"
                 local gui_packages="$shared_gui $macos_gui"
-                run_cmd "brew" "brew install --cask $gui_packages"
+                run_cmd "brew" "brew install --cask --force $gui_packages"
             fi
             ;;
     esac
