@@ -26,13 +26,11 @@ curl -fsSL https://raw.githubusercontent.com/alantian/setup-scripts/main/local.s
 
 ## What Gets Installed
 
-Essential development tools including git, curl, build tools, modern CLI utilities (like eza, bat, fzf, zoxide), system utilities (vim, htop, tmux), and zsh shell setup. Optional GUI applications include browsers, editors, and media tools with user confirmation.
+**CLI Tools**: Git, curl, build tools, modern alternatives (eza, bat, fzf, zoxide), system utilities (vim, htop, tmux), zsh shell, and language servers.
 
-**CLI Tools**: Development essentials, modern CLI alternatives, language servers, and system utilities.  
-**GUI Applications** (optional): Cross-platform applications like Firefox, VS Code, Discord, media tools.  
-**Installation Methods**: Global script uses system package managers, local script installs recent versions to home directory.
+**GUI Applications** (optional): Firefox, VS Code, Discord, media tools - installed with user confirmation.
 
-**Platform coverage**: Arch Linux has the most comprehensive package set, macOS has excellent coverage via Homebrew, and Ubuntu includes a curated subset from official repositories. For detailed package lists and platform differences, see [CLAUDE.md](CLAUDE.md#package-organization).
+**Methods**: System packages via native package managers + recent versions installed locally to home directory.
 
 ## Supported Systems
 
@@ -40,7 +38,11 @@ Arch Linux, Ubuntu 20.04+, and macOS (Intel/Apple Silicon).
 
 ## Features
 
-Cross-platform, idempotent installation with automatic OS detection, optional GUI application support, clean output management, interrupt handling, zsh shell setup, and AUR support for Arch Linux.
+- **Cross-platform**: Arch Linux, Ubuntu, macOS with automatic OS detection
+- **Idempotent**: Safe to run multiple times - always reaches desired state  
+- **Clean output**: Silent on success, shows errors only when needed
+- **Optional GUI**: 30-second timeout prompt for GUI applications
+- **Shell setup**: Automatic zsh configuration and shell switching
 
 ## Testing
 

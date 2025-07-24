@@ -6,6 +6,12 @@ For user documentation, see [README.md](README.md).
 
 **IMPORTANT**: Both this file and README.md should be updated whenever significant changes are made to the codebase. Update CLAUDE.md for implementation patterns and technical details, update README.md for user-facing features and usage changes. Remove outdated information and keep guidance relevant and actionable.
 
+## Repository Status
+
+**Current State**: Mature, production-ready cross-platform package installation system with comprehensive testing, sophisticated error handling, and advanced output management.
+
+**Last Updated**: January 2025 - All documentation reflects current implementation with recent simplifications to user-facing documentation.
+
 ## Design Goals
 
 ### Idempotence
@@ -24,20 +30,19 @@ Individual scripts (`global.sh`, `local.sh`) run completely without user interac
 - **Automation-friendly**: Safe for CI/CD, containers, and remote execution
 - **Exception**: Only `all.sh` is interactive (prompts user with 30-second timeout before calling global.sh, always runs local.sh)
 
-## Features
+## Key Features
 
-- **Cross-platform**: Automatically detects your OS and shows package list before installation
-- **Idempotent**: Can be run multiple times safely - brings system to up-to-date state
-- **GUI application support**: Optional GUI package installation with 30-second timeout prompt
-- **Interactive prompts**: User can choose CLI-only or CLI+GUI installation
-- **Safe execution**: Includes protection against partial downloads
-- **Clean output**: Shows command output only on failure, silent on success
-- **Smart output management**: Shows last 10 lines of failed commands with truncation indicator if needed
-- **Interrupt handling**: Ctrl+C shows current command output before graceful exit
-- **Shell integration**: Automatically switches to zsh as default shell
-- **AUR support**: Automatically installs yay AUR helper for Arch Linux when needed
-- **Error handling**: Continues on individual package failures
-- **Package filtering**: Multi-line package definitions with comment support
+- **Cross-platform support**: Arch Linux, Ubuntu, macOS with automatic OS detection
+- **Idempotent execution**: Safe to run multiple times, always converges to desired state
+- **Advanced output management**: Silent success, intelligent error reporting with real-time progress indicators
+- **Interactive GUI prompts**: 30-second timeout for optional GUI package installation
+- **Robust error handling**: Graceful failure handling, interrupt protection, partial download safety
+- **Shell integration**: Automatic zsh setup with PATH-aware selection
+- **AUR support**: Automatic yay installation for Arch Linux AUR packages
+- **Local package management**: Home directory installations for tools requiring recent versions
+- **Comprehensive testing**: Automated Docker-based testing for Ubuntu and Arch Linux
+- **Package organization**: Multi-line definitions with comment support and automatic cleaning
+- **User-friendly documentation**: Simplified README with technical details separated into CLAUDE.md
 
 ## Repository Structure
 
@@ -50,15 +55,15 @@ Individual scripts (`global.sh`, `local.sh`) run completely without user interac
 
 ### Local Package Details
 
-The `local.sh` script installs packages to the home directory for tools that need recent versions or aren't available in system repositories:
+The `local.sh` script installs 5 packages to the home directory for tools requiring recent versions:
 
-- **fzf**: Fuzzy finder installed to `~/.fzf` with shell integration
-- **vim-plugins**: Installs vim plugins using Vundle (requires vim)
-- **oh-my-posh**: Modern prompt theme engine installed to `~/.local/bin`
-- **proto**: Tool version manager for Python, Node.js, pnpm, and uv
-- **zoxide**: Smart cd command replacement installed locally
+- **fzf**: Fuzzy finder with shell integration (`~/.fzf`)
+- **vim-plugins**: Vundle-based plugin management (requires vim)
+- **oh-my-posh**: Modern prompt theme engine (`~/.local/bin`)
+- **proto**: Multi-language tool version manager (Python, Node.js, pnpm, uv)
+- **zoxide**: Smart cd replacement with shell integration
 
-All local packages are idempotent and check for existing installations before proceeding. The local.sh script supports both batch installation (no arguments) and individual package selection (`./local.sh package_name`). Use `./local.sh --help` to see available packages.
+All packages are idempotent with installation detection. Supports batch installation (`./local.sh`) or individual selection (`./local.sh package_name`).
 
 ## Core Implementation Patterns
 
@@ -68,13 +73,15 @@ All local packages are idempotent and check for existing installations before pr
 - **Clean formatting**: Uses dimmed text for package categories
 
 ### Command Output Handling
-- **`run_cmd(prefix, command)`**: Centralized function for command execution
+- **`run_cmd(prefix, command)`**: Centralized function for command execution with progress indication
 - **Silent success**: Hides output completely on successful execution
+- **Real-time progress**: Spinner with elapsed time display during command execution
 - **Failure display**: Shows output only on command failure
 - **Smart truncation**: Displays last 10 lines with truncation indicator if needed
 - **Consistent prefixing**: `[pacman]`, `[apt]`, `[brew]`, `[shell]`, etc. prefixes for all output
 - **Temporary files**: Uses mktemp for output capture and cleanup
 - **Interrupt handling**: Ctrl+C shows current command and its output before exiting
+- **Performance timing**: Shows completion time for successful operations
 
 ### Package Filtering
 - **`clean_packages(packages)`**: Filters and cleans package lists before installation
@@ -113,43 +120,34 @@ declare -A PACKAGES=(
 - Development tools: `git wget curl unzip bzip2 rsync`
 - System utilities: `vim htop tree tmux zsh`
 
-**PACKAGES[arch]** (Arch Linux):
+**PACKAGES[arch]** (Most Comprehensive):
 - Build tools: `base-devel zsh-completions`
-- Modern CLI tools: `eza bat tar git-delta fd duf dust bottom btop sd difftastic plocate hexyl zoxide broot direnv fzf croc hyperfine xh entr tig lazygit thefuck ctop xplr glances gtop zenith`
+- Modern CLI tools: Full suite of modern alternatives (eza, bat, fd, etc.)
+- Language servers: 11 language servers for development
 - Fonts: `ttf-meslo-nerd`
-- Language servers: `bash-language-server gopls lua-language-server marksman python-lsp-server rust-analyzer taplo texlab typescript-language-server vscode-css-languageserver vscode-html-languageserver vscode-json-languageserver yaml-language-server`
 
-**PACKAGES[arch_aur]** (Arch Linux AUR):
-- Additional CLI tools: `nodejs-tldr lazydocker`
-- Installed via yay AUR helper (auto-installed if missing)
+**PACKAGES[arch_aur]** (AUR packages):
+- Additional tools: `nodejs-tldr lazydocker`
+- Auto-installs yay AUR helper if missing
 
-**PACKAGES[ubuntu]** (Ubuntu):
-- Build tools: `build-essential byobu software-properties-common apt-transport-https ca-certificates tar gnupg lsb-release`
-- Available modern CLI tools: `bat fd-find plocate zoxide direnv fzf btop entr tig glances`
-- Note: `fd-find` binary is `fdfind`, `bat` is `batcat` due to package conflicts
+**PACKAGES[ubuntu]** (Conservative Subset):
+- Build tools: `build-essential` and essential development packages
+- Available modern tools: Limited to official repository packages
+- Note: Some tools have different names (`fd-find`, `batcat`)
 
-**PACKAGES[macos]** (macOS):
-- Shell/GNU tools: `zsh-completions coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-getopt`
-- Modern CLI tools: `eza bat git-delta fd duf dust bottom btop sd difftastic hexyl zoxide broot direnv fzf croc hyperfine xh entr tig lazygit thefuck ctop xplr glances gtop zenith tldr lazydocker`
+**PACKAGES[macos]** (Homebrew Excellence):
+- GNU tools: Comprehensive GNU tool replacements
+- Modern CLI tools: Near feature parity with Arch Linux
+- Excellent Homebrew integration
 
 **GUI Packages:**
 
-**PACKAGES[shared_gui]** (All Platforms):
-- Cross-platform applications: `firefox vlc gimp`
+**PACKAGES[shared_gui]**: `firefox vlc gimp` (cross-platform)
 
-**PACKAGES[arch_gui]** (Arch Linux Official):
-- Development/creative tools: `visual-studio-code-bin inkscape obs-studio`
-
-**PACKAGES[arch_aur_gui]** (Arch Linux AUR):
-- Communication tools: `discord slack-desktop`
-
-**PACKAGES[ubuntu_gui]** (Ubuntu):
-- Creative tools: `inkscape`
-- Note: Limited to apt-available packages only
-
-**PACKAGES[macos_gui]** (macOS):
-- Development/communication: `visual-studio-code discord slack inkscape obs`
-- Installed via `brew install --cask`
+**Platform-specific GUI packages**:
+- **Arch**: `inkscape obs-studio` (official) + `visual-studio-code-bin discord slack-desktop` (AUR)
+- **Ubuntu**: `inkscape` (limited to apt packages)
+- **macOS**: `visual-studio-code discord slack inkscape obs zed@preview font-meslo-lg-nerd-font` (Homebrew cask)
 
 ### Error Handling and Safety
 - **Wrapper function pattern**: `main()` at script end prevents partial execution
@@ -173,19 +171,18 @@ declare -A PACKAGES=(
 
 ## Development Workflow
 
-### Testing
-Container testing commands are documented in [README.md](README.md#testing) and automated in `basic_test.sh`. Key points for development:
+### Testing Infrastructure
 
-- **Container testing limitation**: Docker-based testing only works on Linux hosts (Linux containers require Linux kernel)
-- **Test script options**: 
-  - `./basic_test.sh` or `./basic_test.sh local` - Tests locally served script via HTTP server
-  - `./basic_test.sh github` - Tests script deployed on GitHub
-- **Automated setup**: Creates non-root testuser with sudo access in containers
-- **Platform coverage**: Tests Ubuntu and Arch Linux distributions
-- **HTTP server management**: Auto-starts/stops Python HTTP server on port 8000 with cleanup
-- **Error handling**: Shows full Docker command and output on test failures
-- **Script hierarchy**: `all.sh` → `global.sh` + `local.sh` (interactive coordinator)
-- **Global vs Local**: `global.sh` installs via system package managers, `local.sh` installs to home directory
+Comprehensive automated testing via `basic_test.sh` with Docker containers:
+
+- **Platform coverage**: Ubuntu and Arch Linux (Linux host required for containers)
+- **Test modes**: Local HTTP server (`./basic_test.sh`) or GitHub deployment (`./basic_test.sh github`)
+- **Automated setup**: Non-root test users with sudo access in clean containers
+- **HTTP server management**: Auto-starts/stops Python server on port 8000 with cleanup
+- **Error reporting**: Full Docker command output on failures
+- **Safety**: Container isolation prevents host system contamination
+
+**Testing workflow**: `all.sh` → `global.sh` + `local.sh` with comprehensive error handling and output capture.
 
 ### Package Management
 - **Consolidated installations**: Single package manager call per platform for performance
@@ -195,7 +192,11 @@ Container testing commands are documented in [README.md](README.md#testing) and 
 - **AUR support**: Automatically installs yay AUR helper for Arch Linux if needed
 
 ### Code Maintenance
-- **Update CLAUDE.md**: Refresh this file when making architectural changes
-- **Update README.md**: Keep user documentation current with feature changes
-- **Remove outdated patterns**: Clean up obsolete information regularly
-- **Keep examples current**: Ensure code samples match actual implementation
+
+- **Documentation sync**: Update both CLAUDE.md (technical) and README.md (user-facing) for changes
+- **README simplification**: Keep user documentation concise, move technical details to CLAUDE.md
+- **Implementation accuracy**: Ensure all examples match current codebase
+- **Remove outdated information**: Regular cleanup of obsolete patterns and references
+- **Testing validation**: Run `./basic_test.sh` before major changes
+- **Cross-platform verification**: Test on all supported platforms when possible
+- **Documentation balance**: README focuses on user experience, CLAUDE.md covers implementation patterns

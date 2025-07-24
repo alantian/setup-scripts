@@ -111,7 +111,7 @@ declare -A PACKAGES=(
     "
     [macos_gui]="
         # Development and communication tools
-        visual-studio-code discord slack inkscape obs
+        visual-studio-code discord slack inkscape obs zed@preview
         # Fonts
         font-meslo-lg-nerd-font
     "
