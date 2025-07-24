@@ -22,28 +22,43 @@ Individual scripts (`global.sh`, `local.sh`) run completely without user interac
 - **No prompts**: All installations proceed automatically with sensible defaults
 - **Non-interactive flags**: Package managers use `--noconfirm`, `--yes`, `-y` flags
 - **Automation-friendly**: Safe for CI/CD, containers, and remote execution
-- **Exception**: Only `all.sh` is interactive (prompts before calling other scripts)
+- **Exception**: Only `all.sh` is interactive (prompts user with 30-second timeout before calling global.sh, always runs local.sh)
 
 ## Features
 
 - **Cross-platform**: Automatically detects your OS and shows package list before installation
 - **Idempotent**: Can be run multiple times safely - brings system to up-to-date state
-- **Non-interactive**: Individual scripts run without user input (only `all.sh` is interactive)
+- **GUI application support**: Optional GUI package installation with 30-second timeout prompt
+- **Interactive prompts**: User can choose CLI-only or CLI+GUI installation
 - **Safe execution**: Includes protection against partial downloads
 - **Clean output**: Shows command output only on failure, silent on success
 - **Smart output management**: Shows last 10 lines of failed commands with truncation indicator if needed
+- **Interrupt handling**: Ctrl+C shows current command output before graceful exit
 - **Shell integration**: Automatically switches to zsh as default shell
 - **AUR support**: Automatically installs yay AUR helper for Arch Linux when needed
 - **Error handling**: Continues on individual package failures
+- **Package filtering**: Multi-line package definitions with comment support
 
 ## Repository Structure
 
 - `all.sh` - Complete setup script that runs both global and local installers interactively
-- `global.sh` - Cross-platform global development tools installer
-- `local.sh` - Local package installer for recent versions under home directory
-- `basic_test.sh` - Automated testing script for all platforms
+- `global.sh` - Cross-platform global development tools installer (system package managers)
+- `local.sh` - Local package installer for recent versions under home directory (5 packages)
+- `basic_test.sh` - Automated testing script for Linux containers (Ubuntu, Arch)
 - `README.md` - User-facing documentation  
 - `CLAUDE.md` - This technical guidance document
+
+### Local Package Details
+
+The `local.sh` script installs packages to the home directory for tools that need recent versions or aren't available in system repositories:
+
+- **fzf**: Fuzzy finder installed to `~/.fzf` with shell integration
+- **vim-plugins**: Installs vim plugins using Vundle (requires vim)
+- **oh-my-posh**: Modern prompt theme engine installed to `~/.local/bin`
+- **proto**: Tool version manager for Python, Node.js, pnpm, and uv
+- **zoxide**: Smart cd command replacement installed locally
+
+All local packages are idempotent and check for existing installations before proceeding. The local.sh script supports both batch installation (no arguments) and individual package selection (`./local.sh package_name`). Use `./local.sh --help` to see available packages.
 
 ## Core Implementation Patterns
 
@@ -57,51 +72,84 @@ Individual scripts (`global.sh`, `local.sh`) run completely without user interac
 - **Silent success**: Hides output completely on successful execution
 - **Failure display**: Shows output only on command failure
 - **Smart truncation**: Displays last 10 lines with truncation indicator if needed
-- **Consistent prefixing**: `[pacman]`, `[apt]`, `[brew]`, `[shell]` prefixes for all output
+- **Consistent prefixing**: `[pacman]`, `[apt]`, `[brew]`, `[shell]`, etc. prefixes for all output
 - **Temporary files**: Uses mktemp for output capture and cleanup
+- **Interrupt handling**: Ctrl+C shows current command and its output before exiting
+
+### Package Filtering
+- **`clean_packages(packages)`**: Filters and cleans package lists before installation
+- **Comment removal**: Strips lines starting with `#` for inline documentation
+- **Whitespace cleanup**: Removes extra spaces, newlines, and formatting artifacts
+- **Single-line output**: Converts multi-line definitions to space-separated lists
+- **Safe processing**: Prevents package manager errors from malformed input
 
 ### Package Organization
 ```bash
 declare -A PACKAGES=(
-    [shared]="..."       # Cross-platform essentials
-    [arch]="..."         # Arch Linux specific packages
-    [arch_aur]="..."     # Arch Linux AUR packages
-    [ubuntu]="..."       # Ubuntu specific packages
-    [macos]="..."        # macOS specific packages
+    [shared]="..."           # Cross-platform CLI essentials
+    [shared_gui]="..."       # Cross-platform GUI applications
+    [arch]="..."             # Arch Linux CLI packages
+    [arch_gui]="..."         # Arch Linux GUI packages (official repos)
+    [arch_aur]="..."         # Arch Linux AUR CLI packages
+    [arch_aur_gui]="..."     # Arch Linux AUR GUI packages
+    [ubuntu]="..."           # Ubuntu CLI packages
+    [ubuntu_gui]="..."       # Ubuntu GUI packages (apt only)
+    [macos]="..."            # macOS CLI packages
+    [macos_gui]="..."        # macOS GUI packages (brew cask)
 )
 ```
 
+**Package Structure:**
+- **CLI packages**: `shared + [os] + [os]_aur`
+- **GUI packages**: `shared_gui + [os]_gui + [os]_aur_gui`
+- **Multi-line format**: Used for readability with automatic cleaning/filtering
+- **Comment support**: Inline comments are automatically stripped before package installation
+
 #### Detailed Package Lists
 
+**CLI Packages:**
+
 **PACKAGES[shared]** (All Platforms):
-- `git wget curl unzip bzip2 rsync tar` - Development and network tools
-- `vim htop tree tmux` - System utilities and editors
-- `zsh` - Z shell (set as default shell)
+- Development tools: `git wget curl unzip bzip2 rsync`
+- System utilities: `vim htop tree tmux zsh`
 
 **PACKAGES[arch]** (Arch Linux):
-- `base-devel` - Essential build tools and compilers
-- `zsh-completions` - Enhanced shell completions
-- Modern CLI tools: `eza bat git-delta fd duf dust bottom btop sd difftastic plocate hexyl zoxide broot direnv fzf croc hyperfine xh entr tig lazygit thefuck ctop xplr glances gtop zenith ttf-meslo-nerd`
+- Build tools: `base-devel zsh-completions`
+- Modern CLI tools: `eza bat tar git-delta fd duf dust bottom btop sd difftastic plocate hexyl zoxide broot direnv fzf croc hyperfine xh entr tig lazygit thefuck ctop xplr glances gtop zenith`
+- Fonts: `ttf-meslo-nerd`
+- Language servers: `bash-language-server gopls lua-language-server marksman python-lsp-server rust-analyzer taplo texlab typescript-language-server vscode-css-languageserver vscode-html-languageserver vscode-json-languageserver yaml-language-server`
 
 **PACKAGES[arch_aur]** (Arch Linux AUR):
-- `nodejs-tldr lazydocker` - Additional tools only available in AUR
+- Additional CLI tools: `nodejs-tldr lazydocker`
 - Installed via yay AUR helper (auto-installed if missing)
-- Note: Most packages moved from AUR to official repos in recent Arch updates
 
 **PACKAGES[ubuntu]** (Ubuntu):
-- `build-essential` - Build tools and compilers
-- `byobu` - Enhanced terminal multiplexer
-- `software-properties-common apt-transport-https ca-certificates gnupg lsb-release` - Package management tools
-- Limited modern CLI tools: `batcat fd-find plocate zoxide direnv fzf btop entr tig glances`
-- Note: `fd-find` binary is named `fdfind`, `bat` is named `batcat` due to package conflicts
-- Note: Many modern CLI tools not available in Ubuntu repos (eza, git-delta, duf, dust, etc.)
+- Build tools: `build-essential byobu software-properties-common apt-transport-https ca-certificates tar gnupg lsb-release`
+- Available modern CLI tools: `bat fd-find plocate zoxide direnv fzf btop entr tig glances`
+- Note: `fd-find` binary is `fdfind`, `bat` is `batcat` due to package conflicts
 
 **PACKAGES[macos]** (macOS):
-- `zsh-completions` - Shell completions (newer than system version)
-- `coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-getopt` - GNU tools to replace BSD versions
-- Modern CLI tools: `exa bat git-delta fd duf dust bottom btop sd difftastic hexyl zoxide broot direnv fzf croc hyperfine xh entr tig lazygit thefuck ctop xplr glances gtop zenith tldr lazydocker`
-- Fonts: `font-meslo-lg-nerd-font`
-- Note: `plocate` not included (macOS has built-in `locate`)
+- Shell/GNU tools: `zsh-completions coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-getopt`
+- Modern CLI tools: `eza bat git-delta fd duf dust bottom btop sd difftastic hexyl zoxide broot direnv fzf croc hyperfine xh entr tig lazygit thefuck ctop xplr glances gtop zenith tldr lazydocker`
+
+**GUI Packages:**
+
+**PACKAGES[shared_gui]** (All Platforms):
+- Cross-platform applications: `firefox vlc gimp`
+
+**PACKAGES[arch_gui]** (Arch Linux Official):
+- Development/creative tools: `visual-studio-code-bin inkscape obs-studio`
+
+**PACKAGES[arch_aur_gui]** (Arch Linux AUR):
+- Communication tools: `discord slack-desktop`
+
+**PACKAGES[ubuntu_gui]** (Ubuntu):
+- Creative tools: `inkscape`
+- Note: Limited to apt-available packages only
+
+**PACKAGES[macos_gui]** (macOS):
+- Development/communication: `visual-studio-code discord slack inkscape obs`
+- Installed via `brew install --cask`
 
 ### Error Handling and Safety
 - **Wrapper function pattern**: `main()` at script end prevents partial execution
@@ -129,12 +177,15 @@ declare -A PACKAGES=(
 Container testing commands are documented in [README.md](README.md#testing) and automated in `basic_test.sh`. Key points for development:
 
 - **Container testing limitation**: Docker-based testing only works on Linux hosts (Linux containers require Linux kernel)
-- **Use container testing**: Creates realistic non-root environment with sudo access  
-- **Test script**: Use `./basic_test.sh` for automated testing of all platforms
-- **Manual testing**: Commands in README.md for individual platform testing
+- **Test script options**: 
+  - `./basic_test.sh` or `./basic_test.sh local` - Tests locally served script via HTTP server
+  - `./basic_test.sh github` - Tests script deployed on GitHub
+- **Automated setup**: Creates non-root testuser with sudo access in containers
+- **Platform coverage**: Tests Ubuntu and Arch Linux distributions
+- **HTTP server management**: Auto-starts/stops Python HTTP server on port 8000 with cleanup
+- **Error handling**: Shows full Docker command and output on test failures
 - **Script hierarchy**: `all.sh` → `global.sh` + `local.sh` (interactive coordinator)
 - **Global vs Local**: `global.sh` installs via system package managers, `local.sh` installs to home directory
-- **Subshell pattern**: `(python3 -m http.server 8000 & docker run ...)` auto-cleans HTTP server
 
 ### Package Management
 - **Consolidated installations**: Single package manager call per platform for performance

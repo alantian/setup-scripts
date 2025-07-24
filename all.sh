@@ -17,6 +17,7 @@ ask_user() {
         [[ "$response" =~ ^[yY]([eE][sS])?$ ]]
     else
         echo
+        echo "No response within 30 seconds, skipping global packages"
         false
     fi
 }

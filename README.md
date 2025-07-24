@@ -26,7 +26,11 @@ curl -fsSL https://raw.githubusercontent.com/alantian/setup-scripts/main/local.s
 
 ## What Gets Installed
 
-Essential development tools including git, curl, build tools, modern CLI utilities (like eza, bat, fzf, zoxide), system utilities (vim, htop, tmux), and zsh shell setup. The global script installs packages via system package managers, while the local script installs recent versions to your home directory.
+Essential development tools including git, curl, build tools, modern CLI utilities (like eza, bat, fzf, zoxide), system utilities (vim, htop, tmux), and zsh shell setup. Optional GUI applications include browsers, editors, and media tools with user confirmation.
+
+**CLI Tools**: Development essentials, modern CLI alternatives, language servers, and system utilities.  
+**GUI Applications** (optional): Cross-platform applications like Firefox, VS Code, Discord, media tools.  
+**Installation Methods**: Global script uses system package managers, local script installs recent versions to home directory.
 
 **Platform coverage**: Arch Linux has the most comprehensive package set, macOS has excellent coverage via Homebrew, and Ubuntu includes a curated subset from official repositories. For detailed package lists and platform differences, see [CLAUDE.md](CLAUDE.md#package-organization).
 
@@ -36,7 +40,7 @@ Arch Linux, Ubuntu 20.04+, and macOS (Intel/Apple Silicon).
 
 ## Features
 
-Cross-platform, idempotent, non-interactive installation with automatic OS detection, clean output management, zsh shell setup, and AUR support for Arch Linux.
+Cross-platform, idempotent installation with automatic OS detection, optional GUI application support, clean output management, interrupt handling, zsh shell setup, and AUR support for Arch Linux.
 
 ## Testing
 
