@@ -20,13 +20,14 @@ cleanup_and_show_output() {
     fi
     
     if [[ -n "$CURRENT_OUTPUT_FILE" && -f "$CURRENT_OUTPUT_FILE" ]]; then
-        local line_count=$(wc -l < "$CURRENT_OUTPUT_FILE" 2>/dev/null || echo 0)
+        local line_count
+        line_count=$(wc -l < "$CURRENT_OUTPUT_FILE" 2>/dev/null || echo 0)
         if [[ $line_count -gt 0 ]]; then
             info "Output from interrupted command:"
             echo "--- Command Output ---"
-            cat "$CURRENT_OUTPUT_FILE" | while IFS= read -r line; do
+            while IFS= read -r line; do
                 echo -e "${DIM}[$CURRENT_PREFIX]${NC} $line"
-            done
+            done < "$CURRENT_OUTPUT_FILE"
             echo "--- End Output ---"
         fi
         rm -f "$CURRENT_OUTPUT_FILE"
@@ -122,7 +123,8 @@ error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # Run command with clean output (success: silent, failure: show last 10 lines)
 run_cmd() {
-    local prefix="$1" cmd="$2" temp_file=$(mktemp) exit_code=0
+    local prefix="$1" cmd="$2" temp_file exit_code=0
+    temp_file=$(mktemp)
     
     # Set global variables for trap handler
     CURRENT_OUTPUT_FILE="$temp_file"
@@ -134,9 +136,9 @@ run_cmd() {
     local cmd_pid=$!
     
     # Show elapsed time while command runs
-    local start_time=$(date +%s)
+    local start_time spin_index=0
+    start_time=$(date +%s)
     local spinner='|/-\'
-    local spin_index=0
     
     printf "${DIM}[$prefix]${NC} Running"
     
@@ -174,7 +176,8 @@ run_cmd() {
         rm -f "$temp_file"
         return 0
     else
-        local line_count=$(wc -l < "$temp_file" 2>/dev/null || echo 0)
+        local line_count
+        line_count=$(wc -l < "$temp_file" 2>/dev/null || echo 0)
         if [[ $line_count -gt 10 ]]; then
             echo -e "${DIM}[$prefix]${NC} ... ($((line_count - 10)) more lines above)"
             tail -n 10 "$temp_file" | while IFS= read -r line; do
