@@ -8,7 +8,7 @@ set -euo pipefail
 # Package definitions
 declare -A PACKAGES=(
     [shared]="git wget curl unzip bzip2 rsync vim htop tree tmux zsh"
-    [arch]="base-devel zsh-completions eza bat tar git-delta fd duf dust bottom btop sd difftastic plocate hexyl zoxide broot direnv fzf croc hyperfine xh entr tig lazygit thefuck ctop xplr glances gtop zenith ttf-meslo-nerd"
+    [arch]="base-devel zsh-completions eza bat tar git-delta fd duf dust bottom btop sd difftastic plocate hexyl zoxide broot direnv fzf croc hyperfine xh entr tig lazygit thefuck ctop xplr glances gtop zenith ttf-meslo-nerd bash-language-server gopls lua-language-server marksman python-lsp-server rust-analyzer  taplo texlab typescript-language-server  vscode-css-languageserver vscode-html-languageserver vscode-json-languageserver yaml-language-server"
     [arch_aur]="nodejs-tldr lazydocker"
     [ubuntu]="build-essential byobu software-properties-common apt-transport-https ca-certificates tar gnupg lsb-release bat fd-find plocate zoxide direnv fzf btop entr tig glances"
     [macos]="zsh-completions coreutils findutils gnu-tar gnu-sed gawk gnutls gnu-getopt eza bat git-delta fd duf dust bottom btop sd difftastic hexyl zoxide broot direnv fzf croc hyperfine xh entr tig lazygit thefuck ctop xplr glances gtop zenith tldr lazydocker"
