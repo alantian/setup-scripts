@@ -107,11 +107,12 @@ declare -A PACKAGES=(
         # Modern CLI tools via Homebrew
         eza bat git-delta fd duf dust bottom btop sd difftastic hexyl zoxide broot
         direnv fzf croc hyperfine xh entr tig lazygit thefuck ctop xplr glances
-        gtop zenith tldr lazydocker
+        gtop zenith tldr lazydocker fastfetch
     "
     [macos_gui]="
         # Development and communication tools
-        visual-studio-code discord slack inkscape obs zed@preview
+        visual-studio-code inkscape obs zed@preview iterm2 alfred
+				discord slack telegram
         # Fonts
         font-meslo-lg-nerd-font
     "
