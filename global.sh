@@ -111,7 +111,7 @@ declare -A PACKAGES=(
     "
     [macos_gui]="
         # Development. Non GUI but cask packages also goes here (e.g. google-cloud-sdk
-        visual-studio-code inkscape obs zed@preview iterm2 alfred google-cloud-sdk
+        visual-studio-code inkscape obs zed@preview iterm2 alfred google-cloud-sdk google-drive
 				# Communication tools
 				discord slack telegram
         # Fonts
