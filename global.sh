@@ -110,8 +110,9 @@ declare -A PACKAGES=(
         gtop zenith tldr lazydocker fastfetch
     "
     [macos_gui]="
-        # Development and communication tools
-        visual-studio-code inkscape obs zed@preview iterm2 alfred
+        # Development. Non GUI but cask packages also goes here (e.g. google-cloud-sdk
+        visual-studio-code inkscape obs zed@preview iterm2 alfred google-cloud-sdk
+				# Communication tools
 				discord slack telegram
         # Fonts
         font-meslo-lg-nerd-font
