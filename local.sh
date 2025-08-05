@@ -88,9 +88,14 @@ PACKAGES[proto]='
     if [[ ! -f "$HOME/.proto/bin/proto" ]]; then
         run_cmd "proto" "bash <(curl -fsSL https://moonrepo.dev/install/proto.sh) --no-profile --yes"
     fi
-    
-    run_cmd "proto" "$HOME/.proto/bin/proto upgrade" &&
-    run_cmd "proto" "$HOME/.proto/bin/proto install python uv node pnpm"
+  	
+  
+    run_cmd "proto" "$HOME/.proto/bin/proto upgrade"
+	  # We need to install packages one by one.
+    run_cmd "proto" "$HOME/.proto/bin/proto install python"
+    run_cmd "proto" "$HOME/.proto/bin/proto install uv"
+    run_cmd "proto" "$HOME/.proto/bin/proto install node"
+    run_cmd "proto" "$HOME/.proto/bin/proto install pnpm"
 '
 
 # zoxide - smart cd command
@@ -118,7 +123,8 @@ is_installed() {
             [[ -f "$HOME/.local/bin/oh-my-posh" ]]
             ;;
         proto)
-            [[ -f "$HOME/.proto/bin/proto" ]]
+            return 1 
+						# Always reinstall/update proto and tools it manages.
             ;;
         zoxide)
             [[ -f "$HOME/.local/bin/zoxide" ]]
