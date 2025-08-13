@@ -107,7 +107,7 @@ declare -A PACKAGES=(
         # Modern CLI tools via Homebrew
         eza bat git-delta fd duf dust bottom btop sd difftastic hexyl zoxide broot
         direnv fzf croc hyperfine xh entr tig lazygit thefuck ctop xplr glances
-        gtop zenith tldr lazydocker fastfetch
+        gtop zenith tldr lazydocker fastfetch byobu
     "
     [macos_gui]="
         # Development. Non GUI but cask packages also goes here (e.g. google-cloud-sdk
